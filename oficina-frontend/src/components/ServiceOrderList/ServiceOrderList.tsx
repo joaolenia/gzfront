@@ -3,6 +3,11 @@ import { FileText, Printer, Plus } from 'lucide-react';
 import { ServiceOrderForm } from '../ServiceOrderForm/ServiceOrderForm';
 import './ServiceOrderList.css';
 
+// Interface adicionada para aceitar a função de clique vinda do App.tsx
+interface ServiceOrderListProps {
+  onOrderClick: (id: number) => void;
+}
+
 // Dados mockados estruturados com uma variedade maior de serviços
 const mockedOrders = [
   { 
@@ -70,11 +75,12 @@ const mockedOrders = [
   }
 ];
 
-export function ServiceOrderList() {
+export function ServiceOrderList({ onOrderClick }: ServiceOrderListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const handlePrint = (id: number) => {
-    // Futura integração com geração de PDF
+  // Adicionado o evento para prevenir a propagação do clique
+  const handlePrint = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation(); // Impede que o clique no botão abra a tela de detalhes
     console.log(`Gerando PDF da OS #${id}`);
     alert(`Gerando PDF da OS #${id}`);
   };
@@ -91,7 +97,12 @@ export function ServiceOrderList() {
 
       <div className="os-grid">
         {mockedOrders.map((order) => (
-          <div key={order.id} className="os-card">
+          <div 
+            key={order.id} 
+            className="os-card"
+            onClick={() => onOrderClick(order.id)}
+            style={{ cursor: 'pointer' }} // Indica visualmente que o card é clicável
+          >
             <div className="os-card-header">
               <span className="os-number">OS #{order.id}</span>
               <span className={`os-status status-${order.status.toLowerCase().replace(' ', '-')}`}>
@@ -113,7 +124,11 @@ export function ServiceOrderList() {
                 <span className="labor">Mão de obra: R$ {order.labor.toFixed(2)}</span>
                 <span className="total">Total: R$ {order.total.toFixed(2)}</span>
               </div>
-              <button onClick={() => handlePrint(order.id)} className="btn-print" title="Imprimir OS">
+              <button 
+                onClick={(e) => handlePrint(e, order.id)} 
+                className="btn-print" 
+                title="Imprimir OS"
+              >
                 <Printer size={20} />
               </button>
             </div>
