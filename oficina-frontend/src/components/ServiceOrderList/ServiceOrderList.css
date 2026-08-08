@@ -8,7 +8,7 @@
 .sticky-header {
   position: sticky;
   top: 0;
-  background-color: #f3f4f6; /* Mesma cor do fundo do site para mesclar bem */
+background: linear-gradient(to bottom, var(--bg-color) 80%, transparent);
   z-index: 10;
   padding: 2rem 0 1.5rem 0;
 }
@@ -26,18 +26,18 @@
 }
 
 .btn-primary {
-  display: flex;
+display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: #2563eb;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
+  padding: 0.875rem 1.5rem;
+  border-radius: 99px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  transition: var(--transition);
+  box-shadow: 0 4px 15px rgba(67, 56, 202, 0.3);
 }
 
 .btn-primary:hover { background-color: #1d4ed8; }
@@ -109,28 +109,49 @@
 
 /* Grid e Cartões */
 .os-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 1.5rem;
+  padding-top: 1rem;
 }
 
 .os-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Detalhe de borda lateral no hover */
+.os-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+  transform-origin: bottom;
 }
 
 .os-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-color: #bfdbfe;
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(67, 56, 202, 0.2);
+}
+
+.os-card:hover::before {
+  transform: scaleY(1);
 }
 
 .os-card-header {
