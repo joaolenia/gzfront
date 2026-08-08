@@ -11,7 +11,8 @@ export function Header() {
       </div>
       <nav className="header-nav">
         <button className="nav-btn active">Ordens de Serviço</button>
-        <button className="nav-btn">Clientes</button>
+        <button className="nav-btn">xxxxx</button>
+        <button className="nav-btn">xxxxxx</button>
       </nav>
     </header>
   );
