@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { X, Save, Plus, Trash2, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Save, Plus, Trash2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import './ServiceOrderForm.css';
 
 interface ServiceOrderFormProps {
   onClose: () => void;
-  // Opcional: Adicionamos um onSuccess para recarregar a lista caso necessário futuramente
   onSuccess?: () => void; 
 }
 
@@ -18,6 +17,7 @@ interface ItemList {
 
 export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const [formData, setFormData] = useState({
     clientName: '',
@@ -36,19 +36,31 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
   const [parts, setParts] = useState<ItemList[]>([]);
   const [services, setServices] = useState<ItemList[]>([]);
 
+  // Limpa a notificação automaticamente após 3 segundos
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+        if (notification.type === 'success') {
+          if (onSuccess) onSuccess();
+          onClose();
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification, onClose, onSuccess]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Peças
   const addPart = () => setParts([...parts, { id: crypto.randomUUID(), name: '', quantity: 1, price: 0 }]);
   const updatePart = (id: string, field: keyof ItemList, value: string | number) => {
     setParts(parts.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
   const removePart = (id: string) => setParts(parts.filter(p => p.id !== id));
 
-  // Serviços
   const addService = () => setServices([...services, { id: crypto.randomUUID(), name: '', quantity: 1, price: 0 }]);
   const updateService = (id: string, field: keyof ItemList, value: string | number) => {
     setServices(services.map(s => s.id === id ? { ...s, [field]: value } : s));
@@ -58,9 +70,9 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setNotification(null);
 
     try {
-      // Mapeamento dos dados para o formato esperado pelo backend NestJS
       const payload = {
         clientName: formData.clientName,
         clientCpf: formData.clientCpf,
@@ -74,34 +86,29 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
         priority: formData.priority,
         clientRequest: formData.clientRequest,
         status: 'Pendente',
-        mechanic: '', // Opcional no cadastro inicial
+        mechanic: '', 
         parts: parts.map(p => ({
           id: p.id,
           name: p.name,
           qty: p.quantity,
           price: p.price,
-          discount: 0 // Valor padrão inicial
+          discount: 0
         })),
         services: services.map(s => ({
           id: s.id,
           name: s.name,
           qty: s.quantity,
           price: s.price,
-          discount: 0 // Valor padrão inicial
+          discount: 0
         }))
       };
 
-      // Requisição POST para o backend
       await api.post('/os', payload);
-      
-      alert('Ordem de serviço cadastrada com sucesso!');
-      if (onSuccess) onSuccess();
-      onClose();
+      setNotification({ type: 'success', message: 'Ordem de Serviço cadastrada com sucesso!' });
 
     } catch (error) {
       console.error('Erro ao salvar OS:', error);
-      alert('Ocorreu um erro ao tentar cadastrar a Ordem de Serviço. Verifique a conexão com o servidor.');
-    } finally {
+      setNotification({ type: 'error', message: 'Erro ao cadastrar. Verifique a conexão com o servidor.' });
       setIsSubmitting(false);
     }
   };
@@ -109,6 +116,16 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
+        
+        {/* Popup de Notificação Animado */}
+        {notification && (
+          <div className={`notification-popup ${notification.type}`}>
+            {notification.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+            <span>{notification.message}</span>
+            <div className="progress-bar"></div>
+          </div>
+        )}
+
         <div className="modal-header">
           <h2>Nova Ordem de Serviço</h2>
           <button onClick={onClose} className="btn-close" disabled={isSubmitting}>
@@ -117,9 +134,8 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
         </div>
 
         <form onSubmit={handleSubmit} className="os-form">
-          {/* DADOS DO CLIENTE */}
-          <fieldset>
             <legend>Dados do Cliente</legend>
+          <fieldset>
             <div className="form-grid-3">
               <div className="input-group span-2">
                 <label htmlFor="clientName">Nome Completo *</label>
@@ -135,10 +151,9 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
               </div>
             </div>
           </fieldset>
-
-          {/* DADOS DO VEÍCULO */}
-          <fieldset>
             <legend>Dados do Veículo</legend>
+          <fieldset>
+         
             <div className="form-grid-4">
               <div className="input-group span-2">
                 <label htmlFor="vehicleName">Veículo (Modelo) *</label>
@@ -158,10 +173,9 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
               </div>
             </div>
           </fieldset>
-
-          {/* DADOS DA OS */}
+          <legend>Detalhes da OS</legend>
           <fieldset>
-            <legend>Detalhes da OS</legend>
+            
             <div className="form-grid-3">
               <div className="input-group">
                 <label htmlFor="entryDate">Data de Entrada</label>
@@ -188,7 +202,7 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
             </div>
           </fieldset>
 
-          {/* LISTA DE PEÇAS */}
+          {/* LISTA DE PEÇAS COM LABELS */}
           <fieldset>
             <div className="flex-between">
               <legend>Peças (Opcional)</legend>
@@ -199,18 +213,28 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
             
             <div className="dynamic-list">
               {parts.length === 0 && <span className="empty-text">Nenhuma peça adicionada.</span>}
-              {parts.map((part) => (
-                <div key={part.id} className="item-row">
-                  <input type="text" placeholder="Nome da peça" value={part.name} onChange={(e) => updatePart(part.id, 'name', e.target.value)} className="flex-1" disabled={isSubmitting} />
-                  <input type="number" placeholder="Qtd" min="1" value={part.quantity} onChange={(e) => updatePart(part.id, 'quantity', Number(e.target.value))} className="w-20" disabled={isSubmitting} />
-                  <input type="number" placeholder="Preço (R$)" step="0.01" value={part.price} onChange={(e) => updatePart(part.id, 'price', Number(e.target.value))} className="w-32" disabled={isSubmitting} />
-                  <button type="button" onClick={() => removePart(part.id)} className="btn-remove-item" disabled={isSubmitting}><Trash2 size={18} /></button>
+              {parts.map((part, index) => (
+                <div key={part.id} className="item-row-container">
+                  {index === 0 && ( // Mostra as labels apenas na primeira linha para manter limpo
+                    <div className="item-labels">
+                      <span className="flex-1">Nome da peça</span>
+                      <span className="w-20 text-center">Qtd</span>
+                      <span className="w-32 text-center">Preço (R$)</span>
+                      <span className="w-10"></span>
+                    </div>
+                  )}
+                  <div className="item-row">
+                    <input type="text" placeholder="Ex: Pastilha de Freio" value={part.name} onChange={(e) => updatePart(part.id, 'name', e.target.value)} className="flex-1" disabled={isSubmitting} />
+                    <input type="number" placeholder="Qtd" min="1" value={part.quantity} onChange={(e) => updatePart(part.id, 'quantity', Number(e.target.value))} className="w-20 text-center" disabled={isSubmitting} />
+                    <input type="number" placeholder="R$ 0.00" step="0.01" value={part.price} onChange={(e) => updatePart(part.id, 'price', Number(e.target.value))} className="w-32 text-right" disabled={isSubmitting} />
+                    <button type="button" onClick={() => removePart(part.id)} className="btn-remove-item w-10" disabled={isSubmitting}><Trash2 size={18} /></button>
+                  </div>
                 </div>
               ))}
             </div>
           </fieldset>
 
-          {/* LISTA DE SERVIÇOS */}
+          {/* LISTA DE SERVIÇOS COM LABELS */}
           <fieldset>
             <div className="flex-between">
               <legend>Serviços (Opcional)</legend>
@@ -221,12 +245,22 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
             
             <div className="dynamic-list">
               {services.length === 0 && <span className="empty-text">Nenhum serviço adicionado.</span>}
-              {services.map((service) => (
-                <div key={service.id} className="item-row">
-                  <input type="text" placeholder="Descrição do serviço" value={service.name} onChange={(e) => updateService(service.id, 'name', e.target.value)} className="flex-1" disabled={isSubmitting} />
-                  <input type="number" placeholder="Qtd" min="1" value={service.quantity} onChange={(e) => updateService(service.id, 'quantity', Number(e.target.value))} className="w-20" disabled={isSubmitting} />
-                  <input type="number" placeholder="Preço (R$)" step="0.01" value={service.price} onChange={(e) => updateService(service.id, 'price', Number(e.target.value))} className="w-32" disabled={isSubmitting} />
-                  <button type="button" onClick={() => removeService(service.id)} className="btn-remove-item" disabled={isSubmitting}><Trash2 size={18} /></button>
+              {services.map((service, index) => (
+                <div key={service.id} className="item-row-container">
+                  {index === 0 && (
+                    <div className="item-labels">
+                      <span className="flex-1">Descrição do serviço</span>
+                      <span className="w-20 text-center">Qtd</span>
+                      <span className="w-32 text-center">Preço (R$)</span>
+                      <span className="w-10"></span>
+                    </div>
+                  )}
+                  <div className="item-row">
+                    <input type="text" placeholder="Ex: Mão de obra mecânica" value={service.name} onChange={(e) => updateService(service.id, 'name', e.target.value)} className="flex-1" disabled={isSubmitting} />
+                    <input type="number" placeholder="Qtd" min="1" value={service.quantity} onChange={(e) => updateService(service.id, 'quantity', Number(e.target.value))} className="w-20 text-center" disabled={isSubmitting} />
+                    <input type="number" placeholder="R$ 0.00" step="0.01" value={service.price} onChange={(e) => updateService(service.id, 'price', Number(e.target.value))} className="w-32 text-right" disabled={isSubmitting} />
+                    <button type="button" onClick={() => removeService(service.id)} className="btn-remove-item w-10" disabled={isSubmitting}><Trash2 size={18} /></button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -234,7 +268,7 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
 
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn-cancel" disabled={isSubmitting}>Cancelar</button>
-            <button type="submit" className="btn-save" disabled={isSubmitting}>
+            <button type="submit" className="btn-save" disabled={isSubmitting || !!notification}>
               {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
               {isSubmitting ? 'Salvando...' : 'Salvar OS'}
             </button>
