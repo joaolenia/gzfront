@@ -11,8 +11,8 @@ interface ServiceOrderFormProps {
 interface ItemList {
   id: string;
   name: string;
-  quantity: number;
-  price: number;
+  quantity: number | string; // Alterado para aceitar string e não forçar o 0
+  price: number | string;    // Alterado para aceitar string
 }
 
 export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) {
@@ -55,13 +55,14 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const addPart = () => setParts([...parts, { id: crypto.randomUUID(), name: '', quantity: 1, price: 0 }]);
+  // Preço inicia vazio para melhorar a usabilidade
+  const addPart = () => setParts([...parts, { id: crypto.randomUUID(), name: '', quantity: 1, price: '' }]);
   const updatePart = (id: string, field: keyof ItemList, value: string | number) => {
     setParts(parts.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
   const removePart = (id: string) => setParts(parts.filter(p => p.id !== id));
 
-  const addService = () => setServices([...services, { id: crypto.randomUUID(), name: '', quantity: 1, price: 0 }]);
+  const addService = () => setServices([...services, { id: crypto.randomUUID(), name: '', quantity: 1, price: '' }]);
   const updateService = (id: string, field: keyof ItemList, value: string | number) => {
     setServices(services.map(s => s.id === id ? { ...s, [field]: value } : s));
   };
@@ -87,18 +88,19 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
         clientRequest: formData.clientRequest,
         status: 'Pendente',
         mechanic: '', 
+        // Aqui convertemos as strings vazias de volta para número antes de enviar ao banco
         parts: parts.map(p => ({
           id: p.id,
           name: p.name,
-          qty: p.quantity,
-          price: p.price,
+          qty: Number(p.quantity) || 0,
+          price: Number(p.price) || 0,
           discount: 0
         })),
         services: services.map(s => ({
           id: s.id,
           name: s.name,
-          qty: s.quantity,
-          price: s.price,
+          qty: Number(s.quantity) || 0,
+          price: Number(s.price) || 0,
           discount: 0
         }))
       };
@@ -135,6 +137,7 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
 
         <form onSubmit={handleSubmit} className="os-form">
             <legend>Dados do Cliente</legend>
+
           <fieldset>
             <div className="form-grid-3">
               <div className="input-group span-2">
@@ -152,8 +155,8 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
             </div>
           </fieldset>
             <legend>Dados do Veículo</legend>
+
           <fieldset>
-         
             <div className="form-grid-4">
               <div className="input-group span-2">
                 <label htmlFor="vehicleName">Veículo (Modelo) *</label>
@@ -173,9 +176,9 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
               </div>
             </div>
           </fieldset>
-          <legend>Detalhes da OS</legend>
+            <legend>Detalhes da OS</legend>
+
           <fieldset>
-            
             <div className="form-grid-3">
               <div className="input-group">
                 <label htmlFor="entryDate">Data de Entrada</label>
@@ -215,7 +218,7 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
               {parts.length === 0 && <span className="empty-text">Nenhuma peça adicionada.</span>}
               {parts.map((part, index) => (
                 <div key={part.id} className="item-row-container">
-                  {index === 0 && ( // Mostra as labels apenas na primeira linha para manter limpo
+                  {index === 0 && ( 
                     <div className="item-labels">
                       <span className="flex-1">Nome da peça</span>
                       <span className="w-20 text-center">Qtd</span>
@@ -225,8 +228,10 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
                   )}
                   <div className="item-row">
                     <input type="text" placeholder="Ex: Pastilha de Freio" value={part.name} onChange={(e) => updatePart(part.id, 'name', e.target.value)} className="flex-1" disabled={isSubmitting} />
-                    <input type="number" placeholder="Qtd" min="1" value={part.quantity} onChange={(e) => updatePart(part.id, 'quantity', Number(e.target.value))} className="w-20 text-center" disabled={isSubmitting} />
-                    <input type="number" placeholder="R$ 0.00" step="0.01" value={part.price} onChange={(e) => updatePart(part.id, 'price', Number(e.target.value))} className="w-32 text-right" disabled={isSubmitting} />
+                    {/* Alterado e.target.value sem envolver com Number() */}
+                    <input type="number" placeholder="Qtd" min="1" value={part.quantity} onChange={(e) => updatePart(part.id, 'quantity', e.target.value)} className="w-20 text-center" disabled={isSubmitting} />
+                    {/* Alterado e.target.value sem envolver com Number() */}
+                    <input type="number" placeholder="R$ 0.00" step="0.01" value={part.price} onChange={(e) => updatePart(part.id, 'price', e.target.value)} className="w-32 text-right" disabled={isSubmitting} />
                     <button type="button" onClick={() => removePart(part.id)} className="btn-remove-item w-10" disabled={isSubmitting}><Trash2 size={18} /></button>
                   </div>
                 </div>
@@ -257,8 +262,8 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
                   )}
                   <div className="item-row">
                     <input type="text" placeholder="Ex: Mão de obra mecânica" value={service.name} onChange={(e) => updateService(service.id, 'name', e.target.value)} className="flex-1" disabled={isSubmitting} />
-                    <input type="number" placeholder="Qtd" min="1" value={service.quantity} onChange={(e) => updateService(service.id, 'quantity', Number(e.target.value))} className="w-20 text-center" disabled={isSubmitting} />
-                    <input type="number" placeholder="R$ 0.00" step="0.01" value={service.price} onChange={(e) => updateService(service.id, 'price', Number(e.target.value))} className="w-32 text-right" disabled={isSubmitting} />
+                    <input type="number" placeholder="Qtd" min="1" value={service.quantity} onChange={(e) => updateService(service.id, 'quantity', e.target.value)} className="w-20 text-center" disabled={isSubmitting} />
+                    <input type="number" placeholder="R$ 0.00" step="0.01" value={service.price} onChange={(e) => updateService(service.id, 'price', e.target.value)} className="w-32 text-right" disabled={isSubmitting} />
                     <button type="button" onClick={() => removeService(service.id)} className="btn-remove-item w-10" disabled={isSubmitting}><Trash2 size={18} /></button>
                   </div>
                 </div>
