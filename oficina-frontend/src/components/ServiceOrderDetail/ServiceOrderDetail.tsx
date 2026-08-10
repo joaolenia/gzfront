@@ -200,8 +200,9 @@ export function ServiceOrderDetail({ orderId, onBack }: ServiceOrderDetailProps)
                 <input type="text" value={order.clientPhone || ''} onChange={e => handleFieldChange('clientPhone', e.target.value)} className="osd-input-flex" />
               </div>
               <div className="osd-edit-row">
-                <label>Cor / Prioridade:</label>
+                <label>Cor:</label>
                 <input type="text" value={order.vehicleColor || ''} onChange={e => handleFieldChange('vehicleColor', e.target.value)} className="osd-input-flex" placeholder="Cor..." />
+                 <label>Prioridade:</label>
                 <select value={order.priority || 'Normal'} onChange={e => handleFieldChange('priority', e.target.value)} className="osd-input-w24">
                    <option value="Baixa">Baixa</option>
                    <option value="Normal">Normal</option>
@@ -210,8 +211,10 @@ export function ServiceOrderDetail({ orderId, onBack }: ServiceOrderDetailProps)
                 </select>
               </div>
                <div className="osd-edit-row">
-                <label>Responsável / Status:</label>
+                <label>Responsável:</label>
                 <input type="text" value={order.mechanic || ''} onChange={e => handleFieldChange('mechanic', e.target.value)} className="osd-input-flex" placeholder="Mecânico..." />
+                <label>Status:</label>
+               
                 <select value={order.status || 'Pendente'} onChange={e => handleFieldChange('status', e.target.value)} className="osd-input-w32 osd-status-select">
                    <option value="Pendente">Pendente</option>
                    <option value="Em andamento">Em andamento</option>
