@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { FileText, Plus, Search, Filter, Loader2 } from 'lucide-react';
+import { FileText, Plus, Search, Filter, Loader2, Trash2, AlertTriangle, X } from 'lucide-react';
 import { ServiceOrderForm } from '../ServiceOrderForm/ServiceOrderForm';
-import { api } from '../../services/api'; // Importa a configuração do axios
+import { api } from '../../services/api';
 import './ServiceOrderList.css';
 
 interface ServiceOrderListProps {
@@ -12,12 +12,13 @@ export function ServiceOrderList({ onOrderClick }: ServiceOrderListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
-  
-  // Estados para os dados reais e carregamento
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Estado para controlar o modal de exclusão
+  const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Função para buscar as OSs no backend
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
@@ -31,16 +32,29 @@ export function ServiceOrderList({ onOrderClick }: ServiceOrderListProps) {
     }
   };
 
-  // Busca os dados ao montar o componente
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  // Filtro dinâmico das ordens de serviço
+  const handleDelete = async () => {
+    if (!orderToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await api.delete(`/os/${orderToDelete}`);
+      setOrders(orders.filter(order => order.id !== orderToDelete));
+      setOrderToDelete(null); // Fecha o modal
+    } catch (error) {
+      console.error('Erro ao excluir OS:', error);
+      alert('Erro ao tentar excluir a Ordem de Serviço.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       const searchLower = searchTerm.toLowerCase();
-      // Como o veículo ou cliente podem vir vazios do backend inicialmente, adicionamos fallback (|| '')
       const clientMatch = (order.clientName || '').toLowerCase().includes(searchLower);
       const vehicleMatch = (order.vehicleName || '').toLowerCase().includes(searchLower);
       const idMatch = order.id.toString().includes(searchLower);
@@ -52,7 +66,6 @@ export function ServiceOrderList({ onOrderClick }: ServiceOrderListProps) {
     });
   }, [searchTerm, statusFilter, orders]);
 
-  // Função para calcular o total de uma OS (Mão de obra + Peças)
   const calculateTotal = (order: any) => {
     const partsTotal = (order.parts || []).reduce((acc: number, p: any) => acc + (p.qty * p.price - (p.discount || 0)), 0);
     const servicesTotal = (order.services || []).reduce((acc: number, s: any) => acc + (s.qty * s.price - (s.discount || 0)), 0);
@@ -117,10 +130,23 @@ export function ServiceOrderList({ onOrderClick }: ServiceOrderListProps) {
                 onClick={() => onOrderClick(order.id)}
               >
                 <div className="os-card-header">
-                  <span className="os-number">OS #{order.id}</span>
-                  <span className={`os-status status-${(order.status || 'pendente').toLowerCase().replace(' ', '-')}`}>
-                    {order.status || 'Pendente'}
-                  </span>
+                  <div className="os-card-title-group">
+                    <span className="os-number">OS #{order.id}</span>
+                    <span className={`os-status status-${(order.status || 'pendente').toLowerCase().replace(' ', '-')}`}>
+                      {order.status || 'Pendente'}
+                    </span>
+                  </div>
+                  {/* Botão de excluir que impede a propagação do clique para o card inteiro */}
+                  <button 
+                    className="btn-delete-card" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOrderToDelete(order.id);
+                    }}
+                    title="Excluir Ordem de Serviço"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
                 
                 <div className="os-card-body">
@@ -148,7 +174,39 @@ export function ServiceOrderList({ onOrderClick }: ServiceOrderListProps) {
         </div>
       )}
 
-      {/* Ao fechar o form com sucesso, recarrega a lista */}
+      {/* Modal de Confirmação de Exclusão */}
+      {orderToDelete !== null && (
+        <div className="delete-modal-overlay">
+          <div className="delete-modal-content">
+            <div className="delete-modal-icon">
+              <AlertTriangle size={32} />
+            </div>
+            <h3>Excluir Ordem de Serviço?</h3>
+            <p>Você tem certeza que deseja excluir a OS <strong>#{orderToDelete}</strong>? Esta ação não pode ser desfeita.</p>
+            <div className="delete-modal-actions">
+              <button 
+                className="btn-delete-cancel" 
+                onClick={() => setOrderToDelete(null)}
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn-delete-confirm" 
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                {isDeleting ? 'Excluindo...' : 'Sim, excluir'}
+              </button>
+            </div>
+            <button className="delete-modal-close" onClick={() => setOrderToDelete(null)} disabled={isDeleting}>
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {isFormOpen && (
         <ServiceOrderForm 
           onClose={() => setIsFormOpen(false)} 
