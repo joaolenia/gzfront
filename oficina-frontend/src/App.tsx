@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { Header } from './components/Header/Header';
 import { ServiceOrderList } from './components/ServiceOrderList/ServiceOrderList';
 import { ServiceOrderDetail } from './components/ServiceOrderDetail/ServiceOrderDetail';
-import { Reports } from './components/Reports/Reports'; // Importação da nova tela
+import { Reports } from './components/Reports/Reports';
 import './App.css';
 
 function App() {
-  // Adicionado 'reports' ao estado
   const [currentView, setCurrentView] = useState<'list' | 'detail' | 'reports'>('list');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
+  // Função que abre os detalhes da OS (agora usada tanto na Lista quanto nos Relatórios)
   const handleOrderClick = (id: number) => {
     setSelectedOrderId(id);
     setCurrentView('detail');
@@ -22,7 +22,7 @@ function App() {
 
   return (
     <div className="app-layout">
-      {/* O Header agora recebe as propriedades de controle */}
+      {/* Header com navegação */}
       <div className="no-print">
         <Header 
           currentView={currentView} 
@@ -31,17 +31,20 @@ function App() {
       </div>
       
       <main className="main-content">
-        {/* Renderização condicional melhorada para suportar múltiplas telas */}
+        {/* Tela Inicial (Lista de OS) */}
         {currentView === 'list' && (
           <ServiceOrderList onOrderClick={handleOrderClick} />
         )}
         
+        {/* Tela de Detalhes / Impressão */}
         {currentView === 'detail' && selectedOrderId && (
           <ServiceOrderDetail orderId={selectedOrderId} onBack={handleBackToList} />
         )}
 
+        {/* Tela de Relatórios e Faturamento */}
         {currentView === 'reports' && (
-          <Reports />
+          // O erro acontecia aqui! Agora a função está sendo passada corretamente:
+          <Reports onOrderClick={handleOrderClick} />
         )}
       </main>
     </div>

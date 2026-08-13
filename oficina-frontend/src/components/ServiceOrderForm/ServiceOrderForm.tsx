@@ -17,7 +17,6 @@ interface ItemList {
 
 export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFetchingPlate, setIsFetchingPlate] = useState(false); // Novo estado
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const [formData, setFormData] = useState({
@@ -55,52 +54,7 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // =============== LÓGICA DE BUSCA DA PLACA ===============
-  const searchVehicleByPlate = async () => {
-    const placa = formData.vehiclePlate.replace(/[^a-zA-Z0-9]/g, '');
-    if (placa.length !== 7) {
-      setNotification({ type: 'error', message: 'Digite uma placa válida com 7 caracteres.' });
-      return;
-    }
 
-    setIsFetchingPlate(true);
-    
-    try {
-      /*
-        LÓGICA REAL: Descomente este bloco quando assinar uma API (ex: Invertexto)
-        
-        import axios from 'axios';
-        const response = await axios.get(`https://api.invertexto.com/v1/fipe/placa/${placa}?token=SEU_TOKEN_AQUI`);
-        const data = response.data;
-        
-        setFormData(prev => ({ 
-          ...prev, 
-          vehicleName: `${data.marca} ${data.modelo}`, 
-          vehicleYear: data.ano_modelo, 
-          vehicleColor: data.cor 
-        }));
-      */
-
-      // SIMULAÇÃO PARA TESTES (Mock)
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simula tempo de rede
-      
-      setFormData(prev => ({
-        ...prev,
-        vehicleName: 'Volkswagen Gol 1.0 Flex',
-        vehicleYear: '2014/2015',
-        vehicleColor: 'Branca'
-      }));
-
-      setNotification({ type: 'success', message: 'Veículo encontrado com sucesso!' });
-
-    } catch (error) {
-      console.error('Erro na consulta da placa:', error);
-      setNotification({ type: 'error', message: 'Não foi possível encontrar a placa.' });
-    } finally {
-      setIsFetchingPlate(false);
-    }
-  };
-  // ========================================================
 
   const addPart = () => setParts([...parts, { id: crypto.randomUUID(), name: '', quantity: 1, price: '' }]);
   const updatePart = (id: string, field: keyof ItemList, value: string | number) => {
@@ -211,32 +165,23 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
                     required 
                     onChange={handleChange} 
                     value={formData.vehiclePlate}
-                    disabled={isSubmitting || isFetchingPlate} 
+                    disabled={isSubmitting } 
                     maxLength={8}
                     placeholder="ABC1D23"
                   />
-                  <button 
-                    type="button" 
-                    className="btn-search-plate" 
-                    onClick={searchVehicleByPlate}
-                    disabled={isSubmitting || isFetchingPlate || !formData.vehiclePlate}
-                    title="Buscar veículo pela placa"
-                  >
-                    {isFetchingPlate ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-                  </button>
                 </div>
               </div>
               <div className="input-group span-2">
                 <label htmlFor="vehicleName">Veículo (Modelo) *</label>
-                <input type="text" id="vehicleName" name="vehicleName" placeholder="Ex: Honda Civic" required onChange={handleChange} value={formData.vehicleName} disabled={isSubmitting || isFetchingPlate} />
+                <input type="text" id="vehicleName" name="vehicleName" placeholder="Ex: Honda Civic" required onChange={handleChange} value={formData.vehicleName} disabled={isSubmitting } />
               </div>
               <div className="input-group span-2">
                 <label htmlFor="vehicleYear">Ano/Modelo</label>
-                <input type="text" id="vehicleYear" name="vehicleYear" onChange={handleChange} value={formData.vehicleYear} disabled={isSubmitting || isFetchingPlate} />
+                <input type="text" id="vehicleYear" name="vehicleYear" onChange={handleChange} value={formData.vehicleYear} disabled={isSubmitting } />
               </div>
               <div className="input-group span-2">
                 <label htmlFor="vehicleColor">Cor</label>
-                <input type="text" id="vehicleColor" name="vehicleColor" onChange={handleChange} value={formData.vehicleColor} disabled={isSubmitting || isFetchingPlate} />
+                <input type="text" id="vehicleColor" name="vehicleColor" onChange={handleChange} value={formData.vehicleColor} disabled={isSubmitting } />
               </div>
             </div>
           </fieldset>
