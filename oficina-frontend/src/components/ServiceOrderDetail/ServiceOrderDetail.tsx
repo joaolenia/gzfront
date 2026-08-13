@@ -348,6 +348,20 @@ export function ServiceOrderDetail({ orderId, onBack }: ServiceOrderDetailProps)
             <h2>R$ {grandTotal.toFixed(2)}</h2>
           </div>
 
+          {/* NOVA SEÇÃO: Observações da Oficina */}
+          <div className="osd-section-wrapper" style={{ marginTop: '2rem' }}>
+            <div className="osd-section-title">
+              <h3>Observações da Oficina:</h3>
+            </div>
+            <textarea 
+              value={order.observations || ''} 
+              onChange={e => handleFieldChange('observations', e.target.value)} 
+              className="osd-textarea osd-internal-notes"
+              rows={3}
+              placeholder="Adicione garantias, recomendações futuras para o veículo, peças que precisarão ser trocadas em breve..."
+            />
+          </div>
+
           {/* Área de assinaturas (Apenas para o documento físico/impresso) */}
           <div className="osd-signatures">
             <div className="osd-signature-box">
