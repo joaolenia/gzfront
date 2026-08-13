@@ -7,12 +7,12 @@ export function Header() {
     <header className="header">
       <div className="header-logo">
         <Wrench size={28} className="icon" />
-        <h1>Oficina System</h1>
+        <h1>Gz Centro Automotivo</h1>
       </div>
       <nav className="header-nav">
         <button className="nav-btn active">Ordens de Serviço</button>
-        <button className="nav-btn">xxxxx</button>
-        <button className="nav-btn">xxxxxx</button>
+        <button className="nav-btn active">Clientes</button>
+        <button className="nav-btn active">Relatórios</button>
       </nav>
     </header>
   );

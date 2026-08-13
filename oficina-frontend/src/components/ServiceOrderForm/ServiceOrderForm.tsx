@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Plus, Trash2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Save, Plus, Trash2, Loader2, CheckCircle2, AlertCircle, Search } from 'lucide-react';
 import { api } from '../../services/api';
 import './ServiceOrderForm.css';
 
@@ -11,12 +11,13 @@ interface ServiceOrderFormProps {
 interface ItemList {
   id: string;
   name: string;
-  quantity: number | string; // Alterado para aceitar string e não forçar o 0
-  price: number | string;    // Alterado para aceitar string
+  quantity: number | string; 
+  price: number | string;    
 }
 
 export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingPlate, setIsFetchingPlate] = useState(false); // Novo estado
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const [formData, setFormData] = useState({
@@ -36,7 +37,6 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
   const [parts, setParts] = useState<ItemList[]>([]);
   const [services, setServices] = useState<ItemList[]>([]);
 
-  // Limpa a notificação automaticamente após 3 segundos
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => {
@@ -55,7 +55,53 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Preço inicia vazio para melhorar a usabilidade
+  // =============== LÓGICA DE BUSCA DA PLACA ===============
+  const searchVehicleByPlate = async () => {
+    const placa = formData.vehiclePlate.replace(/[^a-zA-Z0-9]/g, '');
+    if (placa.length !== 7) {
+      setNotification({ type: 'error', message: 'Digite uma placa válida com 7 caracteres.' });
+      return;
+    }
+
+    setIsFetchingPlate(true);
+    
+    try {
+      /*
+        LÓGICA REAL: Descomente este bloco quando assinar uma API (ex: Invertexto)
+        
+        import axios from 'axios';
+        const response = await axios.get(`https://api.invertexto.com/v1/fipe/placa/${placa}?token=SEU_TOKEN_AQUI`);
+        const data = response.data;
+        
+        setFormData(prev => ({ 
+          ...prev, 
+          vehicleName: `${data.marca} ${data.modelo}`, 
+          vehicleYear: data.ano_modelo, 
+          vehicleColor: data.cor 
+        }));
+      */
+
+      // SIMULAÇÃO PARA TESTES (Mock)
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simula tempo de rede
+      
+      setFormData(prev => ({
+        ...prev,
+        vehicleName: 'Volkswagen Gol 1.0 Flex',
+        vehicleYear: '2014/2015',
+        vehicleColor: 'Branca'
+      }));
+
+      setNotification({ type: 'success', message: 'Veículo encontrado com sucesso!' });
+
+    } catch (error) {
+      console.error('Erro na consulta da placa:', error);
+      setNotification({ type: 'error', message: 'Não foi possível encontrar a placa.' });
+    } finally {
+      setIsFetchingPlate(false);
+    }
+  };
+  // ========================================================
+
   const addPart = () => setParts([...parts, { id: crypto.randomUUID(), name: '', quantity: 1, price: '' }]);
   const updatePart = (id: string, field: keyof ItemList, value: string | number) => {
     setParts(parts.map(p => p.id === id ? { ...p, [field]: value } : p));
@@ -88,7 +134,6 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
         clientRequest: formData.clientRequest,
         status: 'Pendente',
         mechanic: '', 
-        // Aqui convertemos as strings vazias de volta para número antes de enviar ao banco
         parts: parts.map(p => ({
           id: p.id,
           name: p.name,
@@ -119,7 +164,6 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
     <div className="modal-overlay">
       <div className="modal-content">
         
-        {/* Popup de Notificação Animado */}
         {notification && (
           <div className={`notification-popup ${notification.type}`}>
             {notification.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
@@ -136,9 +180,8 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
         </div>
 
         <form onSubmit={handleSubmit} className="os-form">
-            <legend>Dados do Cliente</legend>
-
           <fieldset>
+            <legend>Dados do Cliente</legend>
             <div className="form-grid-3">
               <div className="input-group span-2">
                 <label htmlFor="clientName">Nome Completo *</label>
@@ -154,31 +197,52 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
               </div>
             </div>
           </fieldset>
-            <legend>Dados do Veículo</legend>
 
           <fieldset>
+            <legend>Dados do Veículo</legend>
             <div className="form-grid-4">
               <div className="input-group span-2">
-                <label htmlFor="vehicleName">Veículo (Modelo) *</label>
-                <input type="text" id="vehicleName" name="vehicleName" placeholder="Ex: Honda Civic" required onChange={handleChange} disabled={isSubmitting} />
-              </div>
-              <div className="input-group">
                 <label htmlFor="vehiclePlate">Placa *</label>
-                <input type="text" id="vehiclePlate" name="vehiclePlate" required onChange={handleChange} disabled={isSubmitting} />
+                <div className="plate-input-wrapper">
+                  <input 
+                    type="text" 
+                    id="vehiclePlate" 
+                    name="vehiclePlate" 
+                    required 
+                    onChange={handleChange} 
+                    value={formData.vehiclePlate}
+                    disabled={isSubmitting || isFetchingPlate} 
+                    maxLength={8}
+                    placeholder="ABC1D23"
+                  />
+                  <button 
+                    type="button" 
+                    className="btn-search-plate" 
+                    onClick={searchVehicleByPlate}
+                    disabled={isSubmitting || isFetchingPlate || !formData.vehiclePlate}
+                    title="Buscar veículo pela placa"
+                  >
+                    {isFetchingPlate ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+                  </button>
+                </div>
               </div>
-              <div className="input-group">
+              <div className="input-group span-2">
+                <label htmlFor="vehicleName">Veículo (Modelo) *</label>
+                <input type="text" id="vehicleName" name="vehicleName" placeholder="Ex: Honda Civic" required onChange={handleChange} value={formData.vehicleName} disabled={isSubmitting || isFetchingPlate} />
+              </div>
+              <div className="input-group span-2">
                 <label htmlFor="vehicleYear">Ano/Modelo</label>
-                <input type="text" id="vehicleYear" name="vehicleYear" onChange={handleChange} disabled={isSubmitting} />
+                <input type="text" id="vehicleYear" name="vehicleYear" onChange={handleChange} value={formData.vehicleYear} disabled={isSubmitting || isFetchingPlate} />
               </div>
               <div className="input-group span-2">
                 <label htmlFor="vehicleColor">Cor</label>
-                <input type="text" id="vehicleColor" name="vehicleColor" onChange={handleChange} disabled={isSubmitting} />
+                <input type="text" id="vehicleColor" name="vehicleColor" onChange={handleChange} value={formData.vehicleColor} disabled={isSubmitting || isFetchingPlate} />
               </div>
             </div>
           </fieldset>
-            <legend>Detalhes da OS</legend>
 
           <fieldset>
+            <legend>Detalhes da OS</legend>
             <div className="form-grid-3">
               <div className="input-group">
                 <label htmlFor="entryDate">Data de Entrada</label>
@@ -205,7 +269,6 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
             </div>
           </fieldset>
 
-          {/* LISTA DE PEÇAS COM LABELS */}
           <fieldset>
             <div className="flex-between">
               <legend>Peças (Opcional)</legend>
@@ -228,9 +291,7 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
                   )}
                   <div className="item-row">
                     <input type="text" placeholder="Ex: Pastilha de Freio" value={part.name} onChange={(e) => updatePart(part.id, 'name', e.target.value)} className="flex-1" disabled={isSubmitting} />
-                    {/* Alterado e.target.value sem envolver com Number() */}
                     <input type="number" placeholder="Qtd" min="1" value={part.quantity} onChange={(e) => updatePart(part.id, 'quantity', e.target.value)} className="w-20 text-center" disabled={isSubmitting} />
-                    {/* Alterado e.target.value sem envolver com Number() */}
                     <input type="number" placeholder="R$ 0.00" step="0.01" value={part.price} onChange={(e) => updatePart(part.id, 'price', e.target.value)} className="w-32 text-right" disabled={isSubmitting} />
                     <button type="button" onClick={() => removePart(part.id)} className="btn-remove-item w-10" disabled={isSubmitting}><Trash2 size={18} /></button>
                   </div>
@@ -239,7 +300,6 @@ export function ServiceOrderForm({ onClose, onSuccess }: ServiceOrderFormProps) 
             </div>
           </fieldset>
 
-          {/* LISTA DE SERVIÇOS COM LABELS */}
           <fieldset>
             <div className="flex-between">
               <legend>Serviços (Opcional)</legend>
