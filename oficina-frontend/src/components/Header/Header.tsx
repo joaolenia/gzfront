@@ -1,8 +1,12 @@
-
 import { Wrench } from 'lucide-react';
 import './Header.css';
 
-export function Header() {
+interface HeaderProps {
+  currentView: string;
+  onViewChange: (view: 'list' | 'reports') => void;
+}
+
+export function Header({ currentView, onViewChange }: HeaderProps) {
   return (
     <header className="header">
       <div className="header-logo">
@@ -10,9 +14,18 @@ export function Header() {
         <h1>Gz Centro Automotivo</h1>
       </div>
       <nav className="header-nav">
-        <button className="nav-btn active">Ordens de Serviço</button>
-        <button className="nav-btn active">Clientes</button>
-        <button className="nav-btn active">Relatórios</button>
+        <button 
+          className={`nav-btn ${(currentView === 'list' || currentView === 'detail') ? 'active' : ''}`}
+          onClick={() => onViewChange('list')}
+        >
+          Ordens de Serviço
+        </button>
+        <button 
+          className={`nav-btn ${currentView === 'reports' ? 'active' : ''}`}
+          onClick={() => onViewChange('reports')}
+        >
+          Relatórios
+        </button>
       </nav>
     </header>
   );
