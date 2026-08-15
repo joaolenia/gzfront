@@ -1,15 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from './components/Header/Header';
 import { ServiceOrderList } from './components/ServiceOrderList/ServiceOrderList';
 import { ServiceOrderDetail } from './components/ServiceOrderDetail/ServiceOrderDetail';
 import { Reports } from './components/Reports/Reports';
+import { Login } from './components/Login/Login'; // Importando a nova tela
 import './App.css';
 
 function App() {
+  // Estado de Autenticação inicializado verificando o localStorage
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('@GZCentroAuto:isAuth') === 'true';
+  });
+
   const [currentView, setCurrentView] = useState<'list' | 'detail' | 'reports'>('list');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
-  // Função que abre os detalhes da OS (agora usada tanto na Lista quanto nos Relatórios)
+  // Função chamada quando o login dá certo
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    localStorage.setItem('@GZCentroAuto:isAuth', 'true');
+  };
+
+
   const handleOrderClick = (id: number) => {
     setSelectedOrderId(id);
     setCurrentView('detail');
@@ -20,9 +32,14 @@ function App() {
     setCurrentView('list');
   };
 
+  // Se não estiver logado, renderiza apenas a tela de Login
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // Se estiver logado, renderiza a aplicação normalmente
   return (
     <div className="app-layout">
-      {/* Header com navegação */}
       <div className="no-print">
         <Header 
           currentView={currentView} 
@@ -31,19 +48,15 @@ function App() {
       </div>
       
       <main className="main-content">
-        {/* Tela Inicial (Lista de OS) */}
         {currentView === 'list' && (
           <ServiceOrderList onOrderClick={handleOrderClick} />
         )}
         
-        {/* Tela de Detalhes / Impressão */}
         {currentView === 'detail' && selectedOrderId && (
           <ServiceOrderDetail orderId={selectedOrderId} onBack={handleBackToList} />
         )}
 
-        {/* Tela de Relatórios e Faturamento */}
         {currentView === 'reports' && (
-          // O erro acontecia aqui! Agora a função está sendo passada corretamente:
           <Reports onOrderClick={handleOrderClick} />
         )}
       </main>
