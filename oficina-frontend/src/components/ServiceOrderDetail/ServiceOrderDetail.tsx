@@ -358,7 +358,6 @@ export function ServiceOrderDetail({ orderId, onBack }: ServiceOrderDetailProps)
               onChange={e => handleFieldChange('observations', e.target.value)} 
               className="osd-textarea osd-internal-notes"
               rows={3}
-              placeholder="Adicione garantias, recomendações futuras para o veículo, peças que precisarão ser trocadas em breve..."
             />
           </div>
 
