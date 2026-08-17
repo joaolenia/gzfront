@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Header } from './components/Header/Header';
 import { ServiceOrderList } from './components/ServiceOrderList/ServiceOrderList';
 import { ServiceOrderDetail } from './components/ServiceOrderDetail/ServiceOrderDetail';

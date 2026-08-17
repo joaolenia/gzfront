@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Plus, Trash2, Loader2, CheckCircle2, AlertCircle, Search } from 'lucide-react';
+import { X, Save, Plus, Trash2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import './ServiceOrderForm.css';
 

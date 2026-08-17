@@ -77,7 +77,7 @@ export function Reports({ onOrderClick }: ReportsProps) {
       const dateStr = order.deliveryDate;
       if (!dateStr) return;
       
-      const [year, month, day] = dateStr.split('-');
+      const [ month, day] = dateStr.split('-');
       const displayDate = `${day}/${month}`;
 
       if (!dataMap[dateStr]) {
