@@ -749,9 +749,9 @@ export function ServiceOrderDetail({
 
                   return (
                     <tr key={part.id}>
+              
                       <td>
-                        <input
-                          type="text"
+                        <textarea
                           value={part.name || ''}
                           onChange={e =>
                             handleListChange(
@@ -761,8 +761,9 @@ export function ServiceOrderDetail({
                               e.target.value
                             )
                           }
-                          className="osd-table-input"
+                          className="osd-table-input osd-desc-textarea"
                           placeholder="Ex: Filtro de Óleo"
+                          rows={1}
                         />
                       </td>
 
@@ -897,7 +898,7 @@ export function ServiceOrderDetail({
           <div className="osd-section-wrapper">
             <div className="osd-section-title osd-flex-between">
               <h3>
-                Relação de Serviços Mão de Obra
+                Relação de Serviços 
               </h3>
 
               <button
@@ -951,9 +952,8 @@ export function ServiceOrderDetail({
 
                   return (
                     <tr key={srv.id}>
-                      <td>
-                        <input
-                          type="text"
+                  <td>
+                        <textarea
                           value={srv.name || ''}
                           onChange={e =>
                             handleListChange(
@@ -963,8 +963,9 @@ export function ServiceOrderDetail({
                               e.target.value
                             )
                           }
-                          className="osd-table-input"
+                          className="osd-table-input osd-desc-textarea"
                           placeholder="Ex: Alinhamento e Balanceamento"
+                          rows={1}
                         />
                       </td>
 

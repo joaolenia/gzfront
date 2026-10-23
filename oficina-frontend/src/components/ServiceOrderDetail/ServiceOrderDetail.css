@@ -208,7 +208,8 @@
 .osd-w32 { width: 9rem; }
 .osd-w10 { width: 2.5rem; }
 
-.osd-text-left { text-align: left; }
+.osd-text-left { text-align: left; 
+}
 .osd-text-center { text-align: center; }
 .osd-text-right { text-align: right; }
 .osd-align-middle { vertical-align: middle; }
@@ -307,4 +308,27 @@
   }
   .osd-signature-box p { margin: 0; font-weight: 700; font-size: 0.9rem; }
   .osd-signature-box span { font-size: 0.7rem; color: #666; }
+}
+
+/* Adicione no arquivo css normal */
+.osd-desc-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 32px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+
+@media print {
+  .osd-desc-textarea {
+    resize: none !important;       /* Remove as setinhas de redimensionamento */
+    overflow: hidden !important;   /* Oculta barras de rolagem indesejadas */
+    height: auto !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    border: none !important;       /* Remove a borda na impressão */
+    background: transparent !important;
+  }
+
 }
